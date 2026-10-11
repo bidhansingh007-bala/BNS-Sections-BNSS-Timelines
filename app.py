@@ -56,8 +56,8 @@ CRIME_DATABASE = [
 # App Header
 st.markdown("""
 <div style="background:linear-gradient(135deg, #020617, #1e3a8a); padding: 20px; border-radius: 15px; color: white; text-align: center; margin-bottom: 20px;">
-    <h1>⚖️ Smart Crime Section & BNSS Timeline Lookup</h1>
-    <p>Crime details ya keywords enter karein aur turant BNS Sections, Saja, aur Investigation Limit (60/90 Days) dekhein.</p>
+    <h1>⚖️ DUMKA POLICE BNS/BNSS ACT & SECTIONS LIBRARY</h1>
+    <p>क्राइम डिटेल्स या कीवर्ड्स एंटर करें और तुरंत भारतीय न्याय संहिता (BNS 2023)  सेक्शन्स, सजा, और इन्वेस्टीगेशन लिमिट (60/90 दिन) देखें.</p>
 </div>
 """, unsafe_allow_html=True)
 
@@ -89,4 +89,4 @@ if query:
         st.warning("⚠️ Koi exact match nahi mila. Kripya keywords badal kar dubara koshish karein (jaise: 'chori', 'hatya', 'loot').")
 
 # Footer
-st.markdown("<br><hr><p style='text-align: center; color: #64748b; font-size: 12px;'>Dumka Police Digital Cell • Built with Python & Streamlit</p>", unsafe_allow_html=True)
+st.markdown("<br><hr><p style='text-align: center; color: #64748b; font-size: 20px;'>Dumka Police CCTNS IT Cell • Built with Python & Streamlit • By Er. Bidhan Chandra Singh & Team </p>", unsafe_allow_html=True)
