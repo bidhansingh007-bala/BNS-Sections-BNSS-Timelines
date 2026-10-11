@@ -82,9 +82,9 @@ if "Crime Details" in search_mode:
   if query:
     query_lower = query.lower()
     for item in bns_data:
-      # Title aur Legal Definition mein search karne ke liye
       title_text = str(item.get("Title", "")).lower()
       def_text = str(item.get("Legal Definition", "")).lower()
+      # Agar exact keyword match ho tabhi list mein daalein (faltu 23 results nahi aayenge)
       if query_lower in title_text or query_lower in def_text:
         matched_results.append(item)
 else:
@@ -93,14 +93,17 @@ else:
   )
   if sec_query:
     sec_clean = sec_query.strip().lower()
+    # User ke input se sirf numbers nikalna (jaise '80(2)' se '80')
     query_digits = "".join(re.findall(r"\d+", sec_clean))
 
     for item in bns_data:
-      sec_val = str(item.get("Section", "")).strip().lower()
-      # Exact match for section numbers (e.g., '80', '103', '303')
-      if query_digits and query_digits == sec_val:
+      sec_num = str(item.get("Section", "")).strip().lower()
+      definition = str(item.get("Legal Definition", "")).lower()
+
+      # Strict Section Matching: Chahe user '80' daale ya '80(2)', Section 80 match ho jayega
+      if query_digits and query_digits == sec_num:
         matched_results.append(item)
-      elif sec_clean in sec_val:
+      elif sec_clean in sec_num:
         matched_results.append(item)
 
 # Display Results Cleanly
@@ -115,15 +118,20 @@ if matched_results:
   for res in display_list:
     sec_no = res.get("Section", "N/A")
     title = res.get("Title", "Section Details")
-    definition = res.get("Legal Definition", "As per BNS 2023 Gazette provisions")
+    definition = res.get(
+        "Legal Definition", "As per BNS 2023 Gazette provisions"
+    )
 
-    # Punishments and BNSS timer can be parsed from Legal Definition or defaults
     punishment_display = (
         definition[:300] + "..."
         if len(definition) > 300
         else definition
     )
-    timer_display = "90 Days (SR Case)" if int(sec_no) in [103, 64, 111, 113] else "60 Days (Non-SR Case)"
+    timer_display = (
+        "90 Days (SR Case)"
+        if str(sec_no) in ["103", "64", "111", "113"]
+        else "60 Days (Non-SR Case)"
+    )
 
     st.markdown(
         f"""
