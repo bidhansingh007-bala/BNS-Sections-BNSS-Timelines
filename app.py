@@ -82,8 +82,12 @@ if "Crime Details" in search_mode:
   if query:
     query_lower = query.lower()
     for item in bns_data:
-      item_text = " ".join([str(val) for val in item.values()]).lower()
+      # Item ke saare text values ko combine karke check karna
+      item_text = " ".join(
+          [str(v) for v in item.values() if v is not None]
+      ).lower()
       if query_lower in item_text:
+        # Exact keyword match ko priority dene ke liye score ya order set kar sakte hain
         matched_results.append(item)
 else:
   sec_query = st.text_input(
@@ -94,57 +98,59 @@ else:
     query_digits = "".join(re.findall(r"\d+", sec_clean))
 
     for item in bns_data:
-      item_text = " ".join([str(val) for val in item.values()]).lower()
-      if (
-          sec_clean in item_text
-          or (query_digits and f"section {query_digits}" in item_text)
-          or (query_digits and f" {query_digits} " in item_text)
-          or (query_digits and item_text.startswith(query_digits))
-      ):
+      item_text = " ".join(
+          [str(v) for v in item.values() if v is not None]
+      ).lower()
+      # Section number ya digits ke aadhar par strict match
+      if query_digits:
+        # Check if section number matches exactly or as a distinct token
+        sec_matches = re.findall(r"\b\d+\b", item_text)
+        if (
+            query_digits in sec_matches
+            or f"section {query_digits}" in item_text
+            or f"section-{query_digits}" in item_text
+        ):
+          matched_results.append(item)
+      elif sec_clean in item_text:
         matched_results.append(item)
 
-# Display Results Dynamically
+# Display Results Cleanly
 if matched_results:
-  # Limit results to avoid clutter if too many match
   display_list = matched_results[:10]
   st.markdown(
       f"<h3 style='color: #166534; font-size: 22px;'>🎯 Total"
-      f" {len(matched_results)} matching result(s) mile hain (Showing"
-      f" top {len(display_list)}):</h3>",
+      f" {len(matched_results)} matching result(s) mile hain:</h3>",
       unsafe_allow_html=True,
   )
 
   for res in display_list:
-    # Dataset ke andar ki actual keys ko dynamically nikalna
-    # Pehla non-empty text value hi title ban jayega
-    title_text = "BNS Section"
-    definition_text = ""
-
-    for k, v in res.items():
-      if v and isinstance(v, str) and len(v.strip()) > 3:
-        if "section" in k.lower() or "title" in k.lower() or "name" in k.lower():
-          title_text = v
-          break
-        elif not definition_text:
-          definition_text = v
-
-    if title_text == "BNSSection" and definition_text:
-      title_text = definition_text[:50] + "..."
+    # Keys ko smart tarike se extract karna
+    sec_no = (
+        res.get("section")
+        or res.get("section_num")
+        or res.get("section_number")
+        or res.get("bns_section")
+        or "BNS Section"
+    )
+    title = (
+        res.get("crime_name_hi")
+        or res.get("crime_name")
+        or res.get("title")
+        or res.get("section_name")
+        or res.get("description")
+        or "Section Details"
+    )
 
     punishment_display = res.get(
         "punishment", "As per BNS 2023 Gazette provisions"
     )
     timer_display = res.get("timer_limit", "60 Days (Non SR Case)")
 
-    # Agar specific section number hai toh usko dhoondhein
-    sec_num_display = res.get("section") or res.get("section_num") or "BNS"
-
     st.markdown(
         f"""
         <div style="background: white; border: 2px solid #cbd5e1; border-radius: 15px; padding: 20px; margin-bottom: 15px; box-shadow: 0 6px 12px rgba(0,0,0,0.08);">
-            <h2 style="color: #1e3a8a; margin-top: 0; font-size: 24px;">📌 Section / Details: {sec_num_display}</h2>
+            <h2 style="color: #1e3a8a; margin-top: 0; font-size: 24px;">📌 Section {sec_no}: {title}</h2>
             <hr style="margin: 10px 0 15px 0; border:0; border-top:2px solid #e2e8f0;">
-            <p style="font-size: 16px; color: #334155;"><b>Description:</b> {title_text}</p>
             <p style="font-size: 16px;"><b>Punishment (Saja):</b> {punishment_display}</p>
             <p style="font-size: 16px;"><b>Investigation Limit (BNSS Timer):</b> <span style="background: #dcfce7; color: #166534; padding: 3px 10px; border-radius: 6px; font-weight: bold;">{timer_display}</span></p>
         </div>
