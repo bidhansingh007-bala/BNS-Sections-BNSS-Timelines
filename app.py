@@ -13,7 +13,7 @@ st.set_page_config(
 st.sidebar.markdown("### 🌐 Language / Bhasha")
 language = st.sidebar.radio("Bhasha Chuniye:", ("English", "Hindi"))
 
-# JSON Database Load karne ka code (Language ke anusaar)
+# JSON Database Load karne ka code
 try:
   if language == "Hindi":
     with open("bns_database_hindi.json", "r", encoding="utf-8") as f:
@@ -26,25 +26,8 @@ try:
       f"Total Sections Loaded ({language}): {len(bns_data)}"
   )
 except Exception as e:
-  st.sidebar.error("JSON file load nahi hui, default database use ho raha hai.")
-  bns_data = [
-      {
-          "keywords": ["chori", "theft", "ghar me chori", "chori karna"],
-          "crime_name": "Theft (Chori)",
-          "bns_section": "Section 303 BNS",
-          "section_num": "303",
-          "punishment": "Upto 3 years imprisonment or fine or both",
-          "timer_limit": "60 Days (Non-SR Case)",
-      },
-      {
-          "keywords": ["hatya", "murder", "katal", "jaan se marna", "kill"],
-          "crime_name": "Murder (Hatya)",
-          "bns_section": "Section 103 BNS",
-          "section_num": "103",
-          "punishment": "Death or Imprisonment for life, and fine",
-          "timer_limit": "90 Days (SR Case)",
-      },
-  ]
+  st.sidebar.error("JSON file load nahi hui!")
+  bns_data = []
 
 # App Header
 if language == "Hindi":
@@ -78,7 +61,7 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# Custom Styling for input font
+# Custom Styling
 st.markdown(
     """
 <style>
@@ -91,9 +74,7 @@ input[type="text"] {
     unsafe_allow_html=True,
 )
 
-# Search Mode Selection
 search_mode = st.radio(mode_label, mode_options, horizontal=True)
-
 matched_results = []
 
 if "Crime Details" in search_mode:
@@ -101,15 +82,9 @@ if "Crime Details" in search_mode:
   if query:
     query_lower = query.lower()
     for item in bns_data:
-      crime_title = (
-          str(item.get("crime_name", ""))
-          or str(item.get("crime_name_hi", ""))
-          or str(item.get("title", ""))
-      )
-      keywords = item.get("keywords", [])
-      if any(
-          query_lower in str(kw).lower() for kw in keywords
-      ) or query_lower in crime_title.lower():
+      # Item ke andar jitna bhi text/values hain sabko ek string bana kar search karo
+      item_text = " ".join([str(val) for val in item.values()]).lower()
+      if query_lower in item_text:
         matched_results.append(item)
 else:
   sec_query = st.text_input(
@@ -120,118 +95,63 @@ else:
     query_digits = "".join(re.findall(r"\d+", sec_clean))
 
     for item in bns_data:
-      # Sabhi possible keys check karna jahan section number ho sakta hai
-      sec_num = (
-          str(item.get("section_num", ""))
-          or str(item.get("section", ""))
-          or str(item.get("section_number", ""))
-      )
-      bns_sec = (
-          str(item.get("bns_section", ""))
-          or str(item.get("act_section", ""))
-          or str(item.get("text", ""))
-      )
-
-      # Match logic: agar digits match karein ya text ke andar section number ho
-      item_digits = "".join(re.findall(r"\d+", sec_num))
+      item_text = " ".join([str(val) for val in item.values()]).lower()
+      # Agar exact number ya section match ho jaye
       if (
-          (query_digits and query_digits == item_digits)
-          or (sec_clean in sec_num.lower())
-          or (sec_clean in bns_sec.lower())
+          sec_clean in item_text
+          or (query_digits and f"section {query_digits}" in item_text)
+          or (query_digits and f" {query_digits} " in item_text)
       ):
-        if item not in matched_results:
-          matched_results.append(item)
+        matched_results.append(item)
 
-# Display Results
-if "Crime Details" in search_mode and "query" in locals() and query:
-  if matched_results:
+# Display Results (Universal Keys Mapping)
+if matched_results:
+  st.markdown(
+      f"<h3 style='color: #166534; font-size: 22px;'>🎯 Total"
+      f" {len(matched_results)} matching result(s) mile hain:</h3>",
+      unsafe_allow_html=True,
+  )
+  for res in matched_results:
+    # Saari possible keys handle karne ke liye
+    title_display = (
+        res.get("crime_name_hi")
+        or res.get("crime_name")
+        or res.get("title")
+        or res.get("section_name")
+        or res.get("name")
+        or "BNS Section Details"
+    )
+    bns_sec_display = (
+        res.get("bns_section")
+        or res.get("section_number")
+        or res.get("section_num")
+        or f"Section Details"
+    )
+    punishment_display = res.get(
+        "punishment", "As per BNS 2023 Gazette provisions"
+    )
+    timer_display = res.get("timer_limit", "60 Days (Non SR Case)")
+
     st.markdown(
-        f"<h3 style='color: #166534; font-size: 22px;'>🎯 Total"
-        f" {len(matched_results)} matching result(s) mile hain:</h3>",
+        f"""
+        <div style="background: white; border: 2px solid #cbd5e1; border-radius: 15px; padding: 20px; margin-bottom: 15px; box-shadow: 0 6px 12px rgba(0,0,0,0.08);">
+            <h2 style="color: #1e3a8a; margin-top: 0; font-size: 26px;">📌 {title_display}</h2>
+            <hr style="margin: 10px 0 15px 0; border:0; border-top:2px solid #e2e8f0;">
+            <p style="font-size: 18px;"><b>Details / Section:</b> <span style="background: #e0e7ff; color: #3730a3; padding: 5px 12px; border-radius: 8px; font-weight: bold; font-size: 18px;">{bns_sec_display}</span></p>
+            <p style="font-size: 18px;"><b>Punishment (Saja):</b> {punishment_display}</p>
+            <p style="font-size: 18px;"><b>Investigation Limit (BNSS Timer):</b> <span style="background: #dcfce7; color: #166534; padding: 5px 12px; border-radius: 8px; font-weight: bold; font-size: 18px;">{timer_display}</span></p>
+        </div>
+        """,
         unsafe_allow_html=True,
     )
-    for res in matched_results:
-      title_display = (
-          res.get("crime_name_hi")
-          if language == "Hindi" and res.get("crime_name_hi")
-          else (
-              res.get("crime_name")
-              or res.get("title")
-              or res.get("section_name", "N/A")
-          )
-      )
-      bns_sec_display = (
-          res.get("bns_section")
-          or res.get("section_number")
-          or f"Section {res.get('section_num', 'N/A')} BNS"
-      )
-      punishment_display = res.get(
-          "punishment", "As per BNS 2023 Gazette provisions"
-      )
-      timer_display = res.get("timer_limit", "60 Days (Non SR Case)")
-
-      st.markdown(
-          f"""
-            <div style="background: white; border: 2px solid #cbd5e1; border-radius: 15px; padding: 20px; margin-bottom: 15px; box-shadow: 0 6px 12px rgba(0,0,0,0.08);">
-                <h2 style="color: #1e3a8a; margin-top: 0; font-size: 26px;">📌 {title_display}</h2>
-                <hr style="margin: 10px 0 15px 0; border:0; border-top:2px solid #e2e8f0;">
-                <p style="font-size: 18px;"><b>Relevant BNS Section:</b> <span style="background: #e0e7ff; color: #3730a3; padding: 5px 12px; border-radius: 8px; font-weight: bold; font-size: 18px;">{bns_sec_display}</span></p>
-                <p style="font-size: 18px;"><b>Punishment (Saja):</b> {punishment_display}</p>
-                <p style="font-size: 18px;"><b>Investigation Limit (BNSS Timer):</b> <span style="background: #dcfce7; color: #166534; padding: 5px 12px; border-radius: 8px; font-weight: bold; font-size: 18px;">{timer_display}</span></p>
-            </div>
-            """,
-          unsafe_allow_html=True,
-      )
-  else:
-    st.warning(
-        "⚠️ Koi exact match nahi mila. Kripya keywords badal kar dubara koshish"
-        " karein."
-    )
-
-elif "Act & Section" in search_mode and "sec_query" in locals() and sec_query:
-  if matched_results:
-    st.markdown(
-        f"<h3 style='color: #166534; font-size: 22px;'>🎯 Section {sec_query}"
-        " ke liye details:</h3>",
-        unsafe_allow_html=True,
-    )
-    for res in matched_results:
-      title_display = (
-          res.get("crime_name_hi")
-          if language == "Hindi" and res.get("crime_name_hi")
-          else (
-              res.get("crime_name")
-              or res.get("title")
-              or res.get("section_name", "N/A")
-          )
-      )
-      bns_sec_display = (
-          res.get("bns_section")
-          or res.get("section_number")
-          or f"Section {res.get('section_num', 'N/A')} BNS"
-      )
-      punishment_display = res.get(
-          "punishment", "As per BNS 2023 Gazette provisions"
-      )
-      timer_display = res.get("timer_limit", "60 Days (Non SR Case)")
-
-      st.markdown(
-          f"""
-            <div style="background: white; border: 2px solid #cbd5e1; border-radius: 15px; padding: 20px; margin-bottom: 15px; box-shadow: 0 6px 12px rgba(0,0,0,0.08);">
-                <h2 style="color: #1e3a8a; margin-top: 0; font-size: 26px;">📌 {title_display}</h2>
-                <hr style="margin: 10px 0 15px 0; border:0; border-top:2px solid #e2e8f0;">
-                <p style="font-size: 18px;"><b>Relevant BNS Section:</b> <span style="background: #e0e7ff; color: #3730a3; padding: 5px 12px; border-radius: 8px; font-weight: bold; font-size: 18px;">{bns_sec_display}</span></p>
-                <p style="font-size: 18px;"><b>Punishment (Saja):</b> {punishment_display}</p>
-                <p style="font-size: 18px;"><b>Investigation Limit (BNSS Timer):</b> <span style="background: #dcfce7; color: #166534; padding: 5px 12px; border-radius: 8px; font-weight: bold; font-size: 18px;">{timer_display}</span></p>
-            </div>
-            """,
-          unsafe_allow_html=True,
-      )
-  else:
-    st.warning(
-        f"⚠️ Section '{sec_query}' ke anusaar database mein koi record nahi"
-        " mila."
-    )
+elif (
+    ("Crime Details" in search_mode and "query" in locals() and query)
+    or ("Act & Section" in search_mode and "sec_query" in locals() and sec_query)
+):
+  st.warning(
+      "⚠️ Koi match nahi mila. Kripya keyword ya section number check karke"
+      " dubara daalein."
+  )
 
 # Footer
 st.markdown(
