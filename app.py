@@ -49,7 +49,7 @@ DATABASES = {
 
 # Original app's operational classification.
 # These are configurable tracking defaults, not a legal determination.
-DEFAULT_SR_SECTIONS = "103, 64, 111, 113"
+DEFAULT_SR_SECTIONS = "103, 64, 80, 111, 113"
 DEFAULT_SR_DAYS = 90
 DEFAULT_NON_SR_DAYS = 60
 
@@ -331,6 +331,10 @@ def normalize_database(raw_data):
 
         if section is None:
             continue
+
+        title = html.unescape(str(title or "")).strip()
+        definition = html.unescape(str(definition or "")).strip()
+        hindi_name = html.unescape(str(hindi_name or "")).strip()
 
         cleaned.append({
             "Section": str(section).strip(),
