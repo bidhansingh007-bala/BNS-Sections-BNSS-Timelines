@@ -1,4 +1,5 @@
 import json
+import re
 import streamlit as st
 
 # Page Configuration
@@ -107,14 +108,20 @@ if "Crime Details" in search_mode:
       ) or query_lower in crime_title.lower():
         matched_results.append(item)
 else:
-  sec_query = st.text_input(sec_prompt, placeholder="Section number daalein...")
-  if sec_query:
-    sec_clean = sec_query.strip().lower()
-    for item in bns_data:
-      sec_num = str(item.get("section_num", ""))
-      bns_sec = str(item.get("bns_section", ""))
-      if sec_clean in sec_num.lower() or sec_clean in bns_sec.lower():
-        matched_results.append(item)
+    sec_query = st.text_input(sec_prompt, placeholder="Section number daalein...")
+    if sec_query:
+        sec_clean = sec_query.strip().lower()
+        # User ke input se sirf digits (numbers) nikalne ke liye (jaise '80(2)' se '80')
+        query_digits = "".join(re.findall(r'\d+', sec_clean))
+        
+        for item in bns_data:
+            sec_num = str(item.get("section_num", "")).strip().lower()
+            bns_sec = str(item.get("bns_section", "")).strip().lower()
+            
+            # Ab yeh exact match ke sath-sath sub-section (jaise 80(2)) ko bhi pakad lega
+            if sec_clean in sec_num or sec_clean in bns_sec or (query_digits and query_digits == sec_num):
+                if item not in matched_results:
+                    matched_results.append(item)
 
 # Display Results
 if "Crime Details" in search_mode and "query" in locals() and query:
