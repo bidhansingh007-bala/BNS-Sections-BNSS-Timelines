@@ -53,15 +53,24 @@ CRIME_DATABASE = [
     }
 ]
 
-# App Header
+# App Header (Bigger fonts applied)
 st.markdown("""
-<div style="background:linear-gradient(135deg, #020617, #1e3a8a); padding: 25px; border-radius: 25px; color: white; text-align: center; margin-bottom: 25px;">
-    <h1>⚖️ DUMKA POLICE BNS/BNSS ACT & SECTIONS LIBRARY</h1>
-    <p>क्राइम डिटेल्स या कीवर्ड्स एंटर करें और तुरंत भारतीय न्याय संहिता (BNS 2023)  सेक्शन्स, सजा, और इन्वेस्टीगेशन लिमिट (60/90 दिन) देखें.</p>
+<div style="background:linear-gradient(135deg, #020617, #1e3a8a); padding: 30px; border-radius: 20px; color: white; text-align: center; margin-bottom: 25px;">
+    <h1 style="font-size: 38px; font-weight: 900;">⚖️ DUMKA POLICE BNS/BNSS ACT & SECTIONS LIBRARY</h1>
+    <p style="font-size: 18px; margin-top: 10px;">क्राइम डिटेल्स या कीवर्ड्स एंटर करें और तुरंत भारतीय न्याय संहिता (BNS 2023) सेक्शन्स, सजा, और इन्वेस्टीगेशन लिमिट (60/90 दिन) देखें.</p>
 </div>
 """, unsafe_allow_html=True)
 
-# Search Input Box
+# Search Input Box (Custom styling for bigger input font)
+st.markdown("""
+<style>
+input[type="text"] {
+    font-size: 18px !important;
+    padding: 12px !important;
+}
+</style>
+""", unsafe_allow_html=True)
+
 query = st.text_input("🔍 Crime Details / Keywords enter karein (jaise: 'chori', 'hatya', 'maarpeet'):", placeholder="Yahan type karein...")
 
 if query:
@@ -74,19 +83,19 @@ if query:
             matched_results.append(item)
             
     if matched_results:
-        st.success(f"🎯 Total {len(matched_results)} matching result(s) mile hain:")
+        st.markdown(f"<h3 style='color: #166534; font-size: 22px;'>🎯 Total {len(matched_results)} matching result(s) mile hain:</h3>", unsafe_allow_html=True)
         for res in matched_results:
             st.markdown(f"""
-            <div style="background: white; border: 1px solid #cbd5e1; border-radius: 12px; padding: 15px; margin-bottom: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
-                <h3 style="color: #1e3a8a; margin-top: 0;">📌 {res['crime_name']}</h3>
-                <hr style="margin: 5px 0 10px 0; border:0; border-top:1px solid #e2e8f0;">
-                <p><b>Relevant BNS Section:</b> <span style="background: #e0e7ff; color: #3730a3; padding: 3px 8px; border-radius: 6px; font-weight: bold;">{res['bns_section']}</span></p>
-                <p><b>Punishment (Saja):</b> {res['punishment']}</p>
-                <p><b>Investigation Limit (BNSS Timer):</b> <span style="background: #dcfce7; color: #166534; padding: 3px 8px; border-radius: 6px; font-weight: bold;">{res['timer_limit']}</span></p>
+            <div style="background: white; border: 2px solid #cbd5e1; border-radius: 15px; padding: 20px; margin-bottom: 15px; box-shadow: 0 6px 12px rgba(0,0,0,0.08);">
+                <h2 style="color: #1e3a8a; margin-top: 0; font-size: 26px;">📌 {res['crime_name']}</h2>
+                <hr style="margin: 10px 0 15px 0; border:0; border-top:2px solid #e2e8f0;">
+                <p style="font-size: 18px;"><b>Relevant BNS Section:</b> <span style="background: #e0e7ff; color: #3730a3; padding: 5px 12px; border-radius: 8px; font-weight: bold; font-size: 18px;">{res['bns_section']}</span></p>
+                <p style="font-size: 18px;"><b>Punishment (Saja):</b> {res['punishment']}</p>
+                <p style="font-size: 18px;"><b>Investigation Limit (BNSS Timer):</b> <span style="background: #dcfce7; color: #166534; padding: 5px 12px; border-radius: 8px; font-weight: bold; font-size: 18px;">{res['timer_limit']}</span></p>
             </div>
             """, unsafe_allow_html=True)
     else:
         st.warning("⚠️ Koi exact match nahi mila. Kripya keywords badal kar dubara koshish karein (jaise: 'chori', 'hatya', 'loot').")
 
-# Footer
-st.markdown("<br><hr><p style='text-align: center; color: #64748b; font-size: 20px;'>Dumka Police CCTNS IT Cell • Built with Python & Streamlit • By Er. Bidhan Chandra Singh & Team </p>", unsafe_allow_html=True)
+# Footer (Font size 20px as requested)
+st.markdown("<br><hr><p style='text-align: center; color: #475569; font-size: 20px; font-weight: 700;'>Dumka Police CCTNS IT Cell • Built with Python & Streamlit • By Er. Bidhan Chandra Singh & Team</p>", unsafe_allow_html=True)
