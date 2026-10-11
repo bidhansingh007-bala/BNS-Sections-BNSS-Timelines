@@ -82,12 +82,10 @@ if "Crime Details" in search_mode:
   if query:
     query_lower = query.lower()
     for item in bns_data:
-      # Item ke saare text values ko combine karke check karna
-      item_text = " ".join(
-          [str(v) for v in item.values() if v is not None]
-      ).lower()
-      if query_lower in item_text:
-        # Exact keyword match ko priority dene ke liye score ya order set kar sakte hain
+      # Title aur Legal Definition mein search karne ke liye
+      title_text = str(item.get("Title", "")).lower()
+      def_text = str(item.get("Legal Definition", "")).lower()
+      if query_lower in title_text or query_lower in def_text:
         matched_results.append(item)
 else:
   sec_query = st.text_input(
@@ -98,20 +96,11 @@ else:
     query_digits = "".join(re.findall(r"\d+", sec_clean))
 
     for item in bns_data:
-      item_text = " ".join(
-          [str(v) for v in item.values() if v is not None]
-      ).lower()
-      # Section number ya digits ke aadhar par strict match
-      if query_digits:
-        # Check if section number matches exactly or as a distinct token
-        sec_matches = re.findall(r"\b\d+\b", item_text)
-        if (
-            query_digits in sec_matches
-            or f"section {query_digits}" in item_text
-            or f"section-{query_digits}" in item_text
-        ):
-          matched_results.append(item)
-      elif sec_clean in item_text:
+      sec_val = str(item.get("Section", "")).strip().lower()
+      # Exact match for section numbers (e.g., '80', '103', '303')
+      if query_digits and query_digits == sec_val:
+        matched_results.append(item)
+      elif sec_clean in sec_val:
         matched_results.append(item)
 
 # Display Results Cleanly
@@ -124,34 +113,24 @@ if matched_results:
   )
 
   for res in display_list:
-    # Keys ko smart tarike se extract karna
-    sec_no = (
-        res.get("section")
-        or res.get("section_num")
-        or res.get("section_number")
-        or res.get("bns_section")
-        or "BNS Section"
-    )
-    title = (
-        res.get("crime_name_hi")
-        or res.get("crime_name")
-        or res.get("title")
-        or res.get("section_name")
-        or res.get("description")
-        or "Section Details"
-    )
+    sec_no = res.get("Section", "N/A")
+    title = res.get("Title", "Section Details")
+    definition = res.get("Legal Definition", "As per BNS 2023 Gazette provisions")
 
-    punishment_display = res.get(
-        "punishment", "As per BNS 2023 Gazette provisions"
+    # Punishments and BNSS timer can be parsed from Legal Definition or defaults
+    punishment_display = (
+        definition[:300] + "..."
+        if len(definition) > 300
+        else definition
     )
-    timer_display = res.get("timer_limit", "60 Days (Non SR Case)")
+    timer_display = "90 Days (SR Case)" if int(sec_no) in [103, 64, 111, 113] else "60 Days (Non-SR Case)"
 
     st.markdown(
         f"""
         <div style="background: white; border: 2px solid #cbd5e1; border-radius: 15px; padding: 20px; margin-bottom: 15px; box-shadow: 0 6px 12px rgba(0,0,0,0.08);">
-            <h2 style="color: #1e3a8a; margin-top: 0; font-size: 24px;">📌 Section {sec_no}: {title}</h2>
+            <h2 style="color: #1e3a8a; margin-top: 0; font-size: 24px;">📌 Section {sec_no} BNS: {title}</h2>
             <hr style="margin: 10px 0 15px 0; border:0; border-top:2px solid #e2e8f0;">
-            <p style="font-size: 16px;"><b>Punishment (Saja):</b> {punishment_display}</p>
+            <p style="font-size: 16px; color: #334155;"><b>Legal Definition & Provisions:</b> {punishment_display}</p>
             <p style="font-size: 16px;"><b>Investigation Limit (BNSS Timer):</b> <span style="background: #dcfce7; color: #166534; padding: 3px 10px; border-radius: 6px; font-weight: bold;">{timer_display}</span></p>
         </div>
         """,
