@@ -1,3 +1,12 @@
+import json
+import streamlit as st
+
+# JSON file ko read karne ka code
+with open("bns_database_auto.json", "r", encoding="utf-8") as f:
+  bns_data = json.load(f)
+
+# Sidebar ya screen par check karne ke liye ki data load ho gaya hai
+st.sidebar.success(f"Total Sections Loaded: {len(bns_data)}")
 import streamlit as st
 
 # Page Configuration
