@@ -55,7 +55,7 @@ CRIME_DATABASE = [
 
 # App Header
 st.markdown("""
-<div style="background:linear-gradient(135deg, #020617, #1e3a8a); padding: 20px; border-radius: 15px; color: white; text-align: center; margin-bottom: 20px;">
+<div style="background:linear-gradient(135deg, #020617, #1e3a8a); padding: 20px; border-radius: 22px; color: white; text-align: center; margin-bottom: 20px;">
     <h1>⚖️ DUMKA POLICE BNS/BNSS ACT & SECTIONS LIBRARY</h1>
     <p>क्राइम डिटेल्स या कीवर्ड्स एंटर करें और तुरंत भारतीय न्याय संहिता (BNS 2023)  सेक्शन्स, सजा, और इन्वेस्टीगेशन लिमिट (60/90 दिन) देखें.</p>
 </div>
