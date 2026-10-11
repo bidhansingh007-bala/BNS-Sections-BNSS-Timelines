@@ -101,6 +101,9 @@ st.markdown(
     }
 
     .section-card {
+        st.code(), 
+        st.text(),
+        st.write(),
         background: white;
         border: 1px solid #dce5f0;
         border-radius: 13px;
