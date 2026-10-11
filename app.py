@@ -26,10 +26,7 @@ try:
       f"Total Sections Loaded ({language}): {len(bns_data)}"
   )
 except Exception as e:
-  # Agar file load hone mein error aaye toh fallback ke liye hardcoded CRIME_DATABASE use karein
-  st.sidebar.error(
-      "JSON file load nahi hui, default database use ho raha hai."
-  )
+  st.sidebar.error("JSON file load nahi hui, default database use ho raha hai.")
   bns_data = [
       {
           "keywords": ["chori", "theft", "ghar me chori", "chori karna"],
@@ -49,21 +46,27 @@ except Exception as e:
       },
   ]
 
-# App Header (Bigger fonts)
+# App Header
 if language == "Hindi":
   header_title = "⚖️ DUMKA POLICE BNS/BNSS ACT & SECTIONS LIBRARY"
   header_desc = "क्राइम डिटेल्स या सेक्शन नंबर से सर्च करें और तुरंत भारतीय न्याय संहिता (BNS 2023) सेक्शन्स, सजा, और इन्वेस्टीगेशन लिमिट (60/90 दिन) देखें."
   mode_label = "🔍 Search Mode Chuniye:"
-  mode_options = ["Crime Details / Keywords se Search Karein", "Act & Section Number se Search Karein"]
+  mode_options = [
+      "Crime Details / Keywords se Search Karein",
+      "Act & Section Number se Search Karein",
+  ]
   query_prompt = "Crime details enter karein (jaise: 'theft', 'murder'):"
-  sec_prompt = "BNS Section Number enter karein (jaise: '303', '103', '64'):"
+  sec_prompt = "BNS Section Number enter karein (jaise: '303', '103', '80'):"
 else:
   header_title = "⚖️ DUMKA POLICE BNS/BNSS ACT & SECTIONS LIBRARY"
   header_desc = "Search by crime details or section number to instantly view BNS 2023 sections, punishments, and investigation limits (60/90 days)."
   mode_label = "🔍 Select Search Mode:"
-  mode_options = ["Search by Crime Details / Keywords", "Search by Act & Section Number"]
+  mode_options = [
+      "Search by Crime Details / Keywords",
+      "Search by Act & Section Number",
+  ]
   query_prompt = "Enter crime details (e.g., 'theft', 'murder'):"
-  sec_prompt = "Enter BNS Section Number (e.g., '303', '103', '64'):"
+  sec_prompt = "Enter BNS Section Number (e.g., '303', '103', '80'):"
 
 st.markdown(
     f"""
@@ -75,7 +78,7 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# Custom Styling for bigger input font
+# Custom Styling for input font
 st.markdown(
     """
 <style>
@@ -98,30 +101,46 @@ if "Crime Details" in search_mode:
   if query:
     query_lower = query.lower()
     for item in bns_data:
-      # Keywords ya crime name mein search karna
-      crime_title = item.get("crime_name", "") or item.get(
-          "crime_name_hi", ""
+      crime_title = (
+          str(item.get("crime_name", ""))
+          or str(item.get("crime_name_hi", ""))
+          or str(item.get("title", ""))
       )
       keywords = item.get("keywords", [])
       if any(
-          query_lower in kw.lower() for kw in keywords
+          query_lower in str(kw).lower() for kw in keywords
       ) or query_lower in crime_title.lower():
         matched_results.append(item)
 else:
-    sec_query = st.text_input(sec_prompt, placeholder="Section number daalein...")
-    if sec_query:
-        sec_clean = sec_query.strip().lower()
-        # User ke input se sirf digits (numbers) nikalne ke liye (jaise '80(2)' se '80')
-        query_digits = "".join(re.findall(r'\d+', sec_clean))
-        
-        for item in bns_data:
-            sec_num = str(item.get("section_num", "")).strip().lower()
-            bns_sec = str(item.get("bns_section", "")).strip().lower()
-            
-            # Ab yeh exact match ke sath-sath sub-section (jaise 80(2)) ko bhi pakad lega
-            if sec_clean in sec_num or sec_clean in bns_sec or (query_digits and query_digits == sec_num):
-                if item not in matched_results:
-                    matched_results.append(item)
+  sec_query = st.text_input(
+      sec_prompt, placeholder="Section number daalein..."
+  )
+  if sec_query:
+    sec_clean = sec_query.strip().lower()
+    query_digits = "".join(re.findall(r"\d+", sec_clean))
+
+    for item in bns_data:
+      # Sabhi possible keys check karna jahan section number ho sakta hai
+      sec_num = (
+          str(item.get("section_num", ""))
+          or str(item.get("section", ""))
+          or str(item.get("section_number", ""))
+      )
+      bns_sec = (
+          str(item.get("bns_section", ""))
+          or str(item.get("act_section", ""))
+          or str(item.get("text", ""))
+      )
+
+      # Match logic: agar digits match karein ya text ke andar section number ho
+      item_digits = "".join(re.findall(r"\d+", sec_num))
+      if (
+          (query_digits and query_digits == item_digits)
+          or (sec_clean in sec_num.lower())
+          or (sec_clean in bns_sec.lower())
+      ):
+        if item not in matched_results:
+          matched_results.append(item)
 
 # Display Results
 if "Crime Details" in search_mode and "query" in locals() and query:
@@ -135,9 +154,17 @@ if "Crime Details" in search_mode and "query" in locals() and query:
       title_display = (
           res.get("crime_name_hi")
           if language == "Hindi" and res.get("crime_name_hi")
-          else res.get("crime_name", "N/A")
+          else (
+              res.get("crime_name")
+              or res.get("title")
+              or res.get("section_name", "N/A")
+          )
       )
-      bns_sec_display = res.get("bns_section", "N/A")
+      bns_sec_display = (
+          res.get("bns_section")
+          or res.get("section_number")
+          or f"Section {res.get('section_num', 'N/A')} BNS"
+      )
       punishment_display = res.get(
           "punishment", "As per BNS 2023 Gazette provisions"
       )
@@ -172,9 +199,17 @@ elif "Act & Section" in search_mode and "sec_query" in locals() and sec_query:
       title_display = (
           res.get("crime_name_hi")
           if language == "Hindi" and res.get("crime_name_hi")
-          else res.get("crime_name", "N/A")
+          else (
+              res.get("crime_name")
+              or res.get("title")
+              or res.get("section_name", "N/A")
+          )
       )
-      bns_sec_display = res.get("bns_section", "N/A")
+      bns_sec_display = (
+          res.get("bns_section")
+          or res.get("section_number")
+          or f"Section {res.get('section_num', 'N/A')} BNS"
+      )
       punishment_display = res.get(
           "punishment", "As per BNS 2023 Gazette provisions"
       )
