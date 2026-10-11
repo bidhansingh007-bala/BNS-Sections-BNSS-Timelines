@@ -101,9 +101,6 @@ st.markdown(
     }
 
     .section-card {
-        st.code(), 
-        st.text(),
-        st.write(),
         background: white;
         border: 1px solid #dce5f0;
         border-radius: 13px;
@@ -815,29 +812,30 @@ sr_sections = {
     if item.strip()
 }
 
-# Two-column cards on desktop; Streamlit stacks columns on narrow screens.
+# Two-column cards on desktop; Streamlit stacks on narrow screens.
 columns = st.columns(2, gap="medium")
 
 for index, record in enumerate(page_results):
     column = columns[index % 2]
 
-    section = record["Section"]
-    title = record["Title"]
-    definition = record["Legal Definition"]
-    hindi_name = record["crime_name_hi"]
-
-    # Escape all database-provided content before HTML rendering.
-    safe_section = html.escape(section)
-    safe_title = html.escape(title or (
-        "Title not available" if language == "English"
+    section = str(record.get("Section") or "").strip()
+    title = record.get("Title") or (
+        "Title not available"
+        if language == "English"
         else "शीर्षक उपलब्ध नहीं"
-    ))
-    safe_definition = html.escape(definition or (
+    )
+    definition = record.get("Legal Definition") or (
         "Definition not available in the selected database."
         if language == "English"
         else "चयनित डेटाबेस में विवरण उपलब्ध नहीं है।"
-    ))
-    safe_hindi_name = html.escape(hindi_name)
+    )
+    hindi_name = record.get("crime_name_hi") or ""
+
+    # Escape database-provided content before HTML rendering.
+    safe_section = html.escape(section)
+    safe_title = html.escape(str(title))
+    safe_definition = html.escape(str(definition))
+    safe_hindi_name = html.escape(str(hindi_name))
 
     case_type, tracking_days = get_operational_timer(
         section,
@@ -846,28 +844,58 @@ for index, record in enumerate(page_results):
         int(non_sr_days),
     )
 
-    statutory_note = get_statutory_note(section, language)
-    safe_statutory_note = html.escape(statutory_note)
+    # Safely handle timer values.
+    case_type = str(case_type or "Not specified")
+    tracking_days = int(tracking_days)
+
+    statutory_note = (
+        get_statutory_note(section, language) or ""
+    )
+    safe_statutory_note = html.escape(str(statutory_note))
+
+    # Calculate tracking date.
+    if fir_date:
+        due_date = (
+            fir_date + timedelta(days=tracking_days)
+        ).strftime("%d-%m-%Y")
+
+        tracking_date_text = (
+            f"Due date: {due_date}"
+            if language == "English"
+            else f"ट्रैकिंग तिथि: {due_date}"
+        )
+    else:
+        tracking_date_text = (
+            "Select an FIR date in the sidebar to calculate a tracking date."
+            if language == "English"
+            else "ट्रैकिंग तिथि निकालने के लिए साइडबार में FIR की तारीख चुनें।"
+        )
 
     with column:
         st.markdown(
             f"""
             <div class="section-card">
+
                 <div class="small-label">
                     {"BNS SECTION" if language == "English" else "BNS धारा"}
                 </div>
+
                 <div class="section-number">
                     {safe_section}
                 </div>
+
                 <div class="section-title">
                     {safe_title}
                 </div>
+
                 <div class="small-label">
                     {"Legal Definition" if language == "English" else "कानूनी विवरण"}
                 </div>
+
                 <div class="definition">
                     {safe_definition}
                 </div>
+
                 {
                     f'''
                     <div style="margin-top:12px;">
@@ -878,37 +906,45 @@ for index, record in enumerate(page_results):
                     if language == "English" and safe_hindi_name
                     else ""
                 }
+
                 <div class="timer-box">
                     <strong>
-                        {"Operational Tracking Reference" if language == "English" else "ऑपरेशनल ट्रैकिंग संदर्भ"}
-                    </strong><br>
+                        {
+                            "Operational Tracking Reference"
+                            if language == "English"
+                            else "ऑपरेशनल ट्रैकिंग संदर्भ"
+                        }
+                    </strong>
+                    <br>
+
                     {html.escape(case_type)} — {tracking_days}
                     {"days" if language == "English" else "दिन"}
+
                     <br>
-                    {
-                        (
-                            f"Due date: {fir_date + timedelta(days=tracking_days)}"
-                            if fir_date
-                            else "Select an FIR date in the sidebar to calculate a tracking date."
-                        )
-                        if language == "English"
-                        else (
-                            f"ट्रैकिंग तिथि: {(fir_date + timedelta(days=tracking_days)).strftime('%d-%m-%Y')}"
-                            if fir_date
-                            else "ट्रैकिंग तिथि निकालने के लिए साइडबार में FIR की तारीख चुनें।"
-                        )
-                    }
+                    {html.escape(tracking_date_text)}
                 </div>
+
                 <div class="legal-box">
                     <strong>
-                        {"Statutory timeline note" if language == "English" else "वैधानिक अवधि संबंधी सूचना"}
-                    </strong><br>
-                    {safe_statutory_note}
+                        {
+                            "Statutory timeline note"
+                            if language == "English"
+                            else "वैधानिक अवधि संबंधी सूचना"
+                        }
+                    </strong>
+                    <br>
+                    {safe_statutory_note or (
+                        "No statutory note available."
+                        if language == "English"
+                        else "वैधानिक अवधि संबंधी सूचना उपलब्ध नहीं है।"
+                    )}
                 </div>
+
             </div>
             """,
             unsafe_allow_html=True,
         )
+
 
         with st.expander(
             "View full details / पूरा विवरण",
