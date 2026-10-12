@@ -39,7 +39,8 @@ if language == "Hindi":
       "Act & Section Number se Search Karein",
   ]
   query_prompt = "Crime details enter karein (jaise: 'theft', 'murder'):"
-  sec_prompt = "BNS Section Number enter karein (jaise: '303', '103', '80'):"
+  sec_input_label = "Section Number enter karein (jaise: '80', '303'):"
+  subsec_input_label = "Sub-Section enter karein (optional, jaise: '2', '1'):"
 else:
   header_title = "⚖️ DUMKA POLICE BNS/BNSS ACT & SECTIONS LIBRARY"
   header_desc = "Search by crime details or section number to instantly view BNS 2023 sections, punishments, and investigation limits (60/90 days)."
@@ -49,7 +50,8 @@ else:
       "Search by Act & Section Number",
   ]
   query_prompt = "Enter crime details (e.g., 'theft', 'murder'):"
-  sec_prompt = "Enter BNS Section Number (e.g., '303', '103', '80'):"
+  sec_input_label = "Enter Section Number (e.g., '80', '303'):"
+  subsec_input_label = "Enter Sub-Section (optional, e.g., '2', '1'):"
 
 st.markdown(
     f"""
@@ -76,10 +78,12 @@ input[type="text"] {
 
 search_mode = st.radio(mode_label, mode_options, horizontal=True)
 matched_results = []
+searched_flag = False
 
 if "Crime Details" in search_mode:
   query = st.text_input(query_prompt, placeholder="Yahan type karein...")
   if query:
+    searched_flag = True
     query_lower = query.lower()
     for item in bns_data:
       title_text = str(item.get("Title", "")).lower()
@@ -87,24 +91,36 @@ if "Crime Details" in search_mode:
       if query_lower in title_text or query_lower in def_text:
         matched_results.append(item)
 else:
-  sec_query = st.text_input(
-      sec_prompt, placeholder="Section number daalein..."
-  )
+  # Do alag columns: Ek Section ke liye, doosra Sub-Section ke liye
+  col1, col2 = st.columns(2)
+  with col1:
+    sec_query = st.text_input(sec_input_label, placeholder="Jaise: 80, 103...")
+  with col2:
+    subsec_query = st.text_input(
+        subsec_input_label, placeholder="Jaise: 2, 1 (optional)..."
+    )
+
   if sec_query:
+    searched_flag = True
     sec_clean = sec_query.strip().lower()
     query_digits = "".join(re.findall(r"\d+", sec_clean))
+    subsec_clean = subsec_query.strip().lower() if subsec_query else ""
 
     for item in bns_data:
-      # Integer ya String dono ko handle karne ke liye
       sec_val = str(item.get("Section", "")).strip().lower()
+      definition = str(item.get("Legal Definition", ""))
 
-      # Exact digit match ya sub-section match
+      # Agar section match ho jaye
       if query_digits and query_digits == sec_val:
-        matched_results.append(item)
-      elif sec_clean in sec_val or sec_clean in str(
-          item.get("Title", "")
-      ).lower():
-        matched_results.append(item)
+        # Agar user ne sub-section bhi dala hai, toh check karein ki definition mein wo maujood hai ya nahi
+        if subsec_clean:
+          pattern = (
+              rf"\(\s*{re.escape(subsec_clean)}\s*\)|\b{re.escape(subsec_clean)}\)"
+          )
+          if re.search(pattern, definition):
+            matched_results.append(item)
+        else:
+          matched_results.append(item)
 
 # Display Results Cleanly
 if matched_results:
@@ -123,8 +139,8 @@ if matched_results:
     )
 
     punishment_display = (
-        definition[:300] + "..."
-        if len(definition) > 300
+        definition[:400] + "..."
+        if len(definition) > 400
         else definition
     )
     timer_display = (
@@ -144,12 +160,9 @@ if matched_results:
         """,
         unsafe_allow_html=True,
     )
-elif (
-    ("Crime Details" in search_mode and "query" in locals() and query)
-    or ("Act & Section" in search_mode and "sec_query" in locals() and sec_query)
-):
+elif searched_flag:
   st.warning(
-      "⚠️ Koi match nahi mila. Kripya keyword ya section number check karke"
+      "⚠️ Koi match nahi mila. Kripya section number aur sub-section check karke"
       " dubara daalein."
   )
 
