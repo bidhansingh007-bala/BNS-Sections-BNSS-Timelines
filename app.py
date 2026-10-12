@@ -29,7 +29,7 @@ except Exception as e:
   st.sidebar.error("JSON file load nahi hui!")
   bns_data = []
 
-# App Header (Bilingual)
+# App Header (Bilingual UI Labels)
 if language == "Hindi":
   header_title = "⚖️ दुमका पुलिस बीएनएस/बीएनएसएस एक्ट एंड सेक्शन लाइब्रेरी"
   header_desc = "क्राइम डिटेल्स या सेक्शन नंबर से सर्च करें और तुरंत भारतीय न्याय संहिता (BNS 2023) सेक्शन्स, सजा, और इन्वेस्टीगेशन लिमिट देखें।"
@@ -39,8 +39,11 @@ if language == "Hindi":
       "एक्ट और सेक्शन नंबर से खोजें",
   ]
   query_prompt = "क्राइम डिटेल्स दर्ज करें (जैसे: 'theft', 'murder', 'chori'):"
-  sec_input_label = "सेक्शन नंबर दर्ज करें (जैसे: '80', '103', '303'):"
+  sec_input_label = "सेक्शन नंबर दर्ज करें (जैसे: '80', '103', '126'):"
   subsec_input_label = "सब-सेक्शन दर्ज करें (वैकल्पिक, जैसे: '2', '1'):"
+  card_title_label = "धारा"
+  def_label = "कानूनी परिभाषा एवं प्रावधान:"
+  timer_label = "इन्वेस्टीगेशन लिमिट (BNSS समयावधि):"
 else:
   header_title = "⚖️ DUMKA POLICE BNS/BNSS ACT & SECTIONS LIBRARY"
   header_desc = "Search by crime details or section number to instantly view BNS 2023 sections, punishments, and investigation limits."
@@ -50,8 +53,11 @@ else:
       "Search by Act & Section Number",
   ]
   query_prompt = "Enter crime details (e.g., 'theft', 'murder'):"
-  sec_input_label = "Enter Section Number (e.g., '80', '103', '303'):"
+  sec_input_label = "Enter Section Number (e.g., '80', '103', '126'):"
   subsec_input_label = "Enter Sub-Section (optional, e.g., '2', '1'):"
+  card_title_label = "Section"
+  def_label = "Legal Definition & Provisions:"
+  timer_label = "Investigation Limit (BNSS Timer):"
 
 st.markdown(
     f"""
@@ -180,10 +186,10 @@ if matched_results:
     st.markdown(
         f"""
         <div style="background: white; border: 2px solid #cbd5e1; border-radius: 15px; padding: 20px; margin-bottom: 15px; box-shadow: 0 6px 12px rgba(0,0,0,0.08);">
-            <h2 style="color: #1e3a8a; margin-top: 0; font-size: 22px;">📌 Section {sec_no} BNS: {title}</h2>
+            <h2 style="color: #1e3a8a; margin-top: 0; font-size: 22px;">📌 {card_title_label} {sec_no} BNS: {title}</h2>
             <hr style="margin: 10px 0 15px 0; border:0; border-top:2px solid #e2e8f0;">
-            <p style="font-size: 16px; color: #334155;"><b>Legal Definition & Provisions:</b> {punishment_display}</p>
-            <p style="font-size: 16px;"><b>Investigation Limit (BNSS Timer):</b> <span style="background: #dcfce7; color: #166534; padding: 3px 10px; border-radius: 6px; font-weight: bold;">{timer_display}</span></p>
+            <p style="font-size: 16px; color: #334155;"><b>{def_label}</b> {punishment_display}</p>
+            <p style="font-size: 16px;"><b>{timer_label}</b> <span style="background: #dcfce7; color: #166534; padding: 3px 10px; border-radius: 6px; font-weight: bold;">{timer_display}</span></p>
         </div>
         """,
         unsafe_allow_html=True,
